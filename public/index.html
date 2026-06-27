@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agent Task Analyzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Reset & Variables ─────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -28,324 +26,93 @@
       --radius:    4px;
     }
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; }
 
-    /* ── Layout ────────────────────────────────────────── */
-    .app {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      grid-template-rows: 48px 1fr;
-      height: 100vh;
-      overflow: hidden;
-    }
+    .app { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 48px 1fr; height: 100vh; overflow: hidden; }
 
-    /* ── Header ────────────────────────────────────────── */
-    .header {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .header-logo {
-      color: var(--green);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-    }
-
+    /* Header */
+    .header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .header-logo { color: var(--green); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; }
     .header-logo span { color: var(--text-dim); font-weight: 300; }
-
-    .header-status {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-dim);
-      font-size: 11px;
-    }
-
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--text-faint);
-      transition: background 0.3s;
-    }
+    .header-status { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: 11px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); transition: background 0.3s; }
     .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
 
-    /* ── Sidebar ────────────────────────────────────────── */
-    .sidebar {
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-      padding: 16px 0;
-    }
-
-    .sidebar-section {
-      margin-bottom: 24px;
-    }
-
-    .sidebar-label {
-      padding: 0 16px 8px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: var(--text-faint);
-      text-transform: uppercase;
-    }
-
-    .agent-card {
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      border-left: 2px solid transparent;
-      transition: all 0.15s;
-    }
-
+    /* Sidebar */
+    .sidebar { border-right: 1px solid var(--border); overflow-y: auto; padding: 16px 0; }
+    .sidebar-label { padding: 0 16px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-faint); text-transform: uppercase; }
+    .agent-card { padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-left: 2px solid transparent; transition: all 0.15s; }
     .agent-card:hover { background: var(--surface); }
-    .agent-card.active { border-left-color: var(--green); background: var(--surface); }
-
     .agent-icon { font-size: 16px; }
-
     .agent-info { flex: 1; min-width: 0; }
     .agent-name { font-size: 12px; font-weight: 500; color: var(--text); }
     .agent-role { font-size: 10px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agent-badge { font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 2px; background: var(--surface2); color: var(--text-faint); text-transform: uppercase; }
+    .agent-badge.idle  { color: var(--green); background: rgba(0,255,136,0.1); }
+    .agent-badge.busy  { color: var(--orange); background: rgba(255,184,108,0.1); }
+    .agent-badge.error { color: var(--red); background: rgba(255,85,85,0.1); }
 
-    .agent-badge {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 5px;
-      border-radius: 2px;
-      background: var(--surface2);
-      color: var(--text-faint);
-      text-transform: uppercase;
-      transition: all 0.2s;
-    }
+    /* History */
+    .history-panel { border-top: 1px solid var(--border); padding: 12px 0; margin-top: 8px; }
+    .history-item { padding: 8px 16px; cursor: pointer; transition: background 0.15s; border-left: 2px solid transparent; }
+    .history-item:hover { background: var(--surface); }
+    .history-item.active { border-left-color: var(--green-dim); background: var(--surface); }
+    .history-item-title { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-item-meta { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
 
-    .agent-badge.idle   { color: var(--green); background: rgba(0,255,136,0.1); }
-    .agent-badge.busy   { color: var(--orange); background: rgba(255,184,108,0.1); }
-    .agent-badge.error  { color: var(--red); background: rgba(255,85,85,0.1); }
+    /* Main */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
 
-    /* ── Main ───────────────────────────────────────────── */
-    .main {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ── Input Zone ─────────────────────────────────────── */
-    .input-zone {
-      padding: 24px 28px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .input-prompt {
-      font-size: 11px;
-      color: var(--green);
-      margin-bottom: 10px;
-      letter-spacing: 0.08em;
-    }
-
+    /* Input zone */
+    .input-zone { padding: 20px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .input-prompt { font-size: 11px; color: var(--green); margin-bottom: 10px; letter-spacing: 0.08em; }
     .input-prompt::before { content: '> '; color: var(--text-dim); }
-
-    .task-input-wrap {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-    }
-
-    .task-input {
-      flex: 1;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      padding: 12px 14px;
-      resize: none;
-      min-height: 72px;
-      transition: border-color 0.2s;
-      line-height: 1.6;
-    }
-
-    .task-input:focus {
-      outline: none;
-      border-color: var(--green);
-      box-shadow: 0 0 0 1px rgba(0,255,136,0.15);
-    }
-
+    .task-input-wrap { display: flex; gap: 10px; align-items: flex-start; }
+    .task-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 10px 14px; resize: none; min-height: 64px; transition: border-color 0.2s; line-height: 1.6; }
+    .task-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 1px rgba(0,255,136,0.15); }
     .task-input::placeholder { color: var(--text-faint); }
+    .decompose-btn { padding: 10px 18px; background: var(--green); color: var(--bg); border: none; border-radius: var(--radius); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.08em; transition: all 0.15s; white-space: nowrap; }
+    .decompose-btn:hover:not(:disabled) { background: var(--green-dim); transform: translateY(-1px); }
+    .decompose-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .decompose-btn.loading { background: var(--surface2); color: var(--green); border: 1px solid var(--green); }
 
-    .decompose-btn {
-      padding: 12px 20px;
-      background: var(--green);
-      color: var(--bg);
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.08em;
-      transition: all 0.15s;
-      white-space: nowrap;
-      min-width: 100px;
-    }
+    /* Board */
+    .task-board { flex: 1; overflow-y: auto; padding: 24px 28px; }
 
-    .decompose-btn:hover:not(:disabled) {
-      background: var(--green-dim);
-      transform: translateY(-1px);
-    }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); text-align: center; gap: 12px; }
+    .empty-state-glyph { font-size: 48px; opacity: 0.3; }
+    .empty-state-title { font-size: 14px; color: var(--text-dim); font-weight: 500; }
+    .empty-state-hint { font-size: 11px; line-height: 1.8; }
 
-    .decompose-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
+    /* Session */
+    .session-block { margin-bottom: 32px; animation: fadeSlideIn 0.3s ease; }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .decompose-btn.loading {
-      background: var(--surface2);
-      color: var(--green);
-      border: 1px solid var(--green);
-    }
+    .session-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .session-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .session-id { font-size: 10px; color: var(--text-faint); }
 
-    /* ── Task Board ─────────────────────────────────────── */
-    .task-board {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 28px;
-    }
-
-    /* ── Empty State ─────────────────────────────────────── */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: var(--text-faint);
-      text-align: center;
-      gap: 12px;
-    }
-
-    .empty-state-glyph {
-      font-size: 48px;
-      opacity: 0.3;
-    }
-
-    .empty-state-title {
-      font-size: 14px;
-      color: var(--text-dim);
-      font-weight: 500;
-    }
-
-    .empty-state-hint {
-      font-size: 11px;
-      line-height: 1.8;
-    }
-
-    /* ── Session Block ──────────────────────────────────── */
-    .session-block {
-      margin-bottom: 32px;
-      animation: fadeSlideIn 0.3s ease;
-    }
-
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .session-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .session-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .session-id {
-      font-size: 10px;
-      color: var(--text-faint);
-    }
-
-    .session-status-badge {
-      margin-left: auto;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
+    .session-status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
     .session-status-badge.decomposing { color: var(--blue); background: rgba(78,168,222,0.12); }
     .session-status-badge.pending     { color: var(--text-dim); background: var(--surface2); }
     .session-status-badge.running     { color: var(--orange); background: rgba(255,184,108,0.12); }
     .session-status-badge.done        { color: var(--green); background: rgba(0,255,136,0.1); }
     .session-status-badge.error       { color: var(--red); background: rgba(255,85,85,0.12); }
 
-    /* ── Decomposing Skeleton ────────────────────────────── */
-    .decomposing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--blue);
-      font-size: 12px;
-    }
+    /* Run button */
+    .run-btn { margin-left: auto; padding: 5px 14px; background: transparent; border: 1px solid var(--green); border-radius: var(--radius); color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.08em; transition: all 0.15s; }
+    .run-btn:hover:not(:disabled) { background: rgba(0,255,136,0.1); }
+    .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .run-btn.running { color: var(--orange); border-color: var(--orange); }
 
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(78,168,222,0.2);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
+    /* Decomposing */
+    .decomposing-indicator { display: flex; align-items: center; gap: 10px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--blue); font-size: 12px; }
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(78,168,222,0.2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Subtask List ───────────────────────────────────── */
-    .subtask-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .subtask-item {
-      display: grid;
-      grid-template-columns: 28px 1fr auto;
-      gap: 12px;
-      align-items: start;
-      padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      transition: border-color 0.2s;
-      animation: subtaskIn 0.25s ease backwards;
-    }
-
-    /* Stagger children */
+    /* Subtasks */
+    .subtask-list { display: flex; flex-direction: column; gap: 6px; }
+    .subtask-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: start; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: border-color 0.2s; animation: subtaskIn 0.25s ease backwards; }
     .subtask-item:nth-child(1) { animation-delay: 0.05s; }
     .subtask-item:nth-child(2) { animation-delay: 0.10s; }
     .subtask-item:nth-child(3) { animation-delay: 0.15s; }
@@ -354,166 +121,62 @@
     .subtask-item:nth-child(6) { animation-delay: 0.30s; }
     .subtask-item:nth-child(7) { animation-delay: 0.35s; }
     .subtask-item:nth-child(8) { animation-delay: 0.40s; }
-
-    @keyframes subtaskIn {
-      from { opacity: 0; transform: translateX(-6px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
+    @keyframes subtaskIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
 
     .subtask-item.running { border-color: var(--orange); }
-    .subtask-item.done    { border-color: rgba(0,255,136,0.25); opacity: 0.75; }
+    .subtask-item.done    { border-color: rgba(0,255,136,0.25); }
     .subtask-item.error   { border-color: var(--red); }
 
-    .subtask-seq {
-      font-size: 11px;
-      color: var(--text-faint);
-      font-weight: 700;
-      padding-top: 2px;
-      text-align: center;
-    }
-
+    .subtask-seq { font-size: 11px; color: var(--text-faint); font-weight: 700; padding-top: 2px; text-align: center; }
     .subtask-body { min-width: 0; }
+    .subtask-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .subtask-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+    .subtask-agent-tag { display: flex; align-items: center; gap: 5px; font-size: 10px; margin-top: 8px; color: var(--text-faint); }
 
-    .subtask-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .subtask-desc {
-      font-size: 11px;
-      color: var(--text-dim);
-      line-height: 1.6;
-    }
-
-    .subtask-agent-tag {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      margin-top: 8px;
-      color: var(--text-faint);
-    }
-
+    /* Result box */
     .subtask-result {
-      margin-top: 8px;
-      padding: 8px 10px;
+      margin-top: 10px;
+      padding: 10px 12px;
       background: var(--bg);
       border-radius: var(--radius);
       font-size: 11px;
-      color: var(--green);
+      color: var(--text);
       border-left: 2px solid var(--green);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
       display: none;
     }
+    .subtask-item.done .subtask-result  { display: block; }
+    .subtask-item.error .subtask-result { display: block; border-left-color: var(--red); color: var(--red); }
 
-    .subtask-item.done .subtask-result { display: block; }
+    /* Running pulse */
+    .subtask-item.running .subtask-title { color: var(--orange); }
 
-    .subtask-status-ctl {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      align-items: flex-end;
-      padding-top: 2px;
-    }
-
-    .status-pill {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      white-space: nowrap;
-    }
-
+    .subtask-status-ctl { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; padding-top: 2px; min-width: 60px; }
+    .status-pill { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
     .status-pill.pending  { color: var(--text-faint); background: var(--surface2); }
     .status-pill.running  { color: var(--orange); background: rgba(255,184,108,0.12); }
     .status-pill.done     { color: var(--green);  background: rgba(0,255,136,0.1); }
     .status-pill.error    { color: var(--red);    background: rgba(255,85,85,0.12); }
     .status-pill.skipped  { color: var(--text-dim); background: var(--surface2); }
 
-    .mark-done-btn {
-      font-size: 10px;
-      padding: 3px 8px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .mark-done-btn:hover {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    /* ── History sidebar toggle ──────────────────────────── */
-    .history-panel {
-      border-top: 1px solid var(--border);
-      padding: 12px 0;
-    }
-
-    .history-item {
-      padding: 8px 16px;
-      cursor: pointer;
-      transition: background 0.15s;
-      border-left: 2px solid transparent;
-    }
-
-    .history-item:hover { background: var(--surface); }
-    .history-item.active { border-left-color: var(--green-dim); background: var(--surface); }
-
-    .history-item-title {
-      font-size: 11px;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .history-item-meta {
-      font-size: 10px;
-      color: var(--text-faint);
-      margin-top: 2px;
-    }
-
-    /* ── Scrollbar ───────────────────────────────────────── */
+    /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
 
-    /* ── Toast ───────────────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 16px;
-      font-size: 12px;
-      color: var(--text);
-      transform: translateY(8px);
-      opacity: 0;
-      transition: all 0.2s;
-      pointer-events: none;
-      z-index: 100;
-      max-width: 320px;
-    }
-
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; font-size: 12px; color: var(--text); transform: translateY(8px); opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; max-width: 320px; }
     #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.error { border-color: var(--red); color: var(--red); }
-    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error   { border-color: var(--red);   color: var(--red); }
+    #toast.success { border-color: var(--green);  color: var(--green); }
+    #toast.info    { border-color: var(--orange); color: var(--orange); }
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Header -->
   <header class="header">
     <div class="header-logo">AGENT<span>TASK</span>ANALYZER</div>
     <div class="header-status">
@@ -522,76 +185,47 @@
     </div>
   </header>
 
-  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Agents</div>
-      <div id="agentList">
-        <!-- 動態載入 -->
-      </div>
-    </div>
-
-    <div class="sidebar-section history-panel">
+    <div class="sidebar-label">Agents</div>
+    <div id="agentList"></div>
+    <div class="history-panel">
       <div class="sidebar-label">歷史紀錄</div>
-      <div id="historyList">
-        <!-- 動態載入 -->
-      </div>
+      <div id="historyList"></div>
     </div>
   </aside>
 
-  <!-- Main -->
   <main class="main">
     <div class="input-zone">
       <div class="input-prompt">輸入你想完成的任務</div>
       <div class="task-input-wrap">
-        <textarea
-          id="taskInput"
-          class="task-input"
-          placeholder="例如：幫我製作一份關於台灣 AI 產業的完整報告，包含市場分析、主要玩家和未來趨勢..."
-          rows="3"
-        ></textarea>
-        <button class="decompose-btn" id="decomposeBtn" onclick="submitTask()">
-          分析任務
-        </button>
+        <textarea id="taskInput" class="task-input"
+          placeholder="例如：幫我製作一份關於台灣 AI 產業的完整報告..." rows="3"></textarea>
+        <button class="decompose-btn" id="decomposeBtn" onclick="submitTask()">分析任務</button>
       </div>
     </div>
-
     <div class="task-board" id="taskBoard">
       <div class="empty-state" id="emptyState">
         <div class="empty-state-glyph">⬡</div>
         <div class="empty-state-title">等待任務輸入</div>
-        <div class="empty-state-hint">
-          輸入任何你想完成的目標<br>
-          系統會自動拆解並分派給最合適的 agent
-        </div>
+        <div class="empty-state-hint">輸入任何你想完成的目標<br>系統會自動拆解並分派給最合適的 agent</div>
       </div>
     </div>
   </main>
-
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ── State ─────────────────────────────────────────────────
-const state = {
-  agents: {},
-  agentStatus: {},   // agentId → 'idle' | 'busy' | 'error'
-  sessions: {},      // sessionId → { session, subtasks[] }
-  activeSession: null,
-};
+const state = { agents: {}, agentStatus: {}, sessions: {}, activeSession: null };
 
 // ── SSE ───────────────────────────────────────────────────
 let evtSource;
-
 function connectSSE() {
   evtSource = new EventSource('/api/events');
-
   evtSource.onopen = () => {
     document.getElementById('sseDot').className = 'status-dot connected';
     document.getElementById('sseLabel').textContent = 'SSE 已連線';
   };
-
   evtSource.onerror = () => {
     document.getElementById('sseDot').className = 'status-dot';
     document.getElementById('sseLabel').textContent = '重新連線...';
@@ -605,43 +239,70 @@ function connectSSE() {
 
   evtSource.addEventListener('session:decomposed', e => {
     const { sessionId, title, subtasks } = JSON.parse(e.data);
-    state.sessions[sessionId] = { session: { id: sessionId, title, status: 'pending' }, subtasks };
+    state.sessions[sessionId] = { session: { id: sessionId, title, status: 'pending', raw_input: '' }, subtasks };
     renderSession(sessionId);
     loadHistory();
-    toast('✓ 任務拆解完成', 'success');
+    toast('✓ 任務拆解完成，點「執行任務」開始', 'success');
   });
 
-  evtSource.addEventListener('session:error', e => {
-    const { sessionId, error } = JSON.parse(e.data);
-    renderSessionError(sessionId, error);
-    toast('拆解失敗：' + error, 'error');
+  evtSource.addEventListener('session:running', e => {
+    const { sessionId } = JSON.parse(e.data);
+    const badge = document.getElementById(`ss-${sessionId}`);
+    if (badge) { badge.className = 'session-status-badge running'; badge.textContent = '執行中'; }
+    const btn = document.getElementById(`run-${sessionId}`);
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 執行中'; btn.className = 'run-btn running'; }
+    toast('▶ 開始執行所有子任務...', 'info');
+  });
+
+  evtSource.addEventListener('session:finished', e => {
+    const { sessionId, status } = JSON.parse(e.data);
+    const badge = document.getElementById(`ss-${sessionId}`);
+    if (badge) { badge.className = `session-status-badge ${status}`; badge.textContent = sessionStatusLabel(status); }
+    const btn = document.getElementById(`run-${sessionId}`);
+    if (btn) btn.style.display = 'none';
+    loadHistory();
+    toast(status === 'done' ? '✓ 全部完成！' : '⚠ 部分任務失敗', status === 'done' ? 'success' : 'error');
   });
 
   evtSource.addEventListener('subtask:updated', e => {
-    const { subtaskId, status } = JSON.parse(e.data);
-    // 更新對應 subtask UI
-    const pill = document.querySelector(`[data-subtask-id="${subtaskId}"] .status-pill`);
+    const { subtaskId, status, result, error } = JSON.parse(e.data);
     const item = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-    if (pill) pill.className = `status-pill ${status}`;
-    if (pill) pill.textContent = statusLabel(status);
-    if (item) item.className = `subtask-item ${status}`;
+    if (!item) return;
+    item.className = `subtask-item ${status}`;
+    const pill = item.querySelector('.status-pill');
+    if (pill) { pill.className = `status-pill ${status}`; pill.textContent = statusLabel(status); }
+    // 填入結果
+    if ((result || error) && status !== 'running') {
+      let resultEl = item.querySelector('.subtask-result');
+      if (!resultEl) {
+        resultEl = document.createElement('div');
+        resultEl.className = 'subtask-result';
+        item.querySelector('.subtask-body').appendChild(resultEl);
+      }
+      resultEl.textContent = result || error;
+    }
+    // 更新 agent badge
+    const agentId = item.dataset.agentId;
+    if (agentId) {
+      const badge = document.getElementById(`badge-${agentId}`);
+      if (badge) {
+        badge.className = status === 'running' ? 'agent-badge busy' : 'agent-badge idle';
+        badge.textContent = status === 'running' ? 'BUSY' : 'IDLE';
+      }
+    }
   });
 }
 
-// ── Load Agents ───────────────────────────────────────────
+// ── Agents ────────────────────────────────────────────────
 async function loadAgents() {
   const res = await fetch('/api/agents');
   const { agents } = await res.json();
-  agents.forEach(a => {
-    state.agents[a.id] = a;
-    state.agentStatus[a.id] = 'idle';
-  });
+  agents.forEach(a => { state.agents[a.id] = a; state.agentStatus[a.id] = 'idle'; });
   renderAgents();
 }
 
 function renderAgents() {
-  const el = document.getElementById('agentList');
-  el.innerHTML = Object.values(state.agents).map(a => `
+  document.getElementById('agentList').innerHTML = Object.values(state.agents).map(a => `
     <div class="agent-card" data-agent-id="${a.id}">
       <span class="agent-icon">${a.icon}</span>
       <div class="agent-info">
@@ -653,21 +314,18 @@ function renderAgents() {
   `).join('');
 }
 
-// ── Load History ──────────────────────────────────────────
+// ── History ───────────────────────────────────────────────
 async function loadHistory() {
   const res = await fetch('/api/sessions');
   const { sessions } = await res.json();
   const el = document.getElementById('historyList');
-
   if (!sessions.length) {
     el.innerHTML = '<div style="padding:8px 16px;font-size:10px;color:var(--text-faint)">尚無紀錄</div>';
     return;
   }
-
   el.innerHTML = sessions.map(s => `
-    <div class="history-item ${state.activeSession === s.id ? 'active' : ''}"
-         onclick="loadSession('${s.id}')">
-      <div class="history-item-title">${escHtml(s.title)}</div>
+    <div class="history-item ${state.activeSession === s.id ? 'active' : ''}" onclick="loadSession('${s.id}')">
+      <div class="history-item-title">${esc(s.title)}</div>
       <div class="history-item-meta">${timeAgo(s.created_at)} · ${s.status}</div>
     </div>
   `).join('');
@@ -681,181 +339,121 @@ async function loadSession(id) {
   renderSession(id);
 }
 
-// ── Submit Task ───────────────────────────────────────────
+// ── Submit ────────────────────────────────────────────────
 async function submitTask() {
   const input = document.getElementById('taskInput').value.trim();
   if (!input) return;
-
   const btn = document.getElementById('decomposeBtn');
-  btn.disabled = true;
-  btn.className = 'decompose-btn loading';
-  btn.textContent = '分析中...';
-
+  btn.disabled = true; btn.className = 'decompose-btn loading'; btn.textContent = '分析中...';
   try {
     const res = await fetch('/api/decompose', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input }),
     });
-
-    if (!res.ok) {
-      const { error } = await res.json();
-      throw new Error(error);
-    }
-
+    if (!res.ok) { const { error } = await res.json(); throw new Error(error); }
     const { sessionId } = await res.json();
     state.activeSession = sessionId;
     document.getElementById('taskInput').value = '';
-
   } catch (err) {
     toast('錯誤：' + err.message, 'error');
   } finally {
-    btn.disabled = false;
-    btn.className = 'decompose-btn';
-    btn.textContent = '分析任務';
+    btn.disabled = false; btn.className = 'decompose-btn'; btn.textContent = '分析任務';
+  }
+}
+
+// ── Run session ───────────────────────────────────────────
+async function runSession(sessionId) {
+  const btn = document.getElementById(`run-${sessionId}`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 送出中...'; }
+  try {
+    const res = await fetch(`/api/sessions/${sessionId}/run`, { method: 'POST' });
+    if (!res.ok) { const { error } = await res.json(); throw new Error(error); }
+  } catch (err) {
+    toast('錯誤：' + err.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '▶ 執行任務'; }
   }
 }
 
 // ── Render ────────────────────────────────────────────────
 function renderDecomposing(sessionId, input) {
   document.getElementById('emptyState')?.remove();
-
-  const board = document.getElementById('taskBoard');
-  const existing = document.getElementById(`session-${sessionId}`);
-  if (existing) existing.remove();
-
+  document.getElementById(`session-${sessionId}`)?.remove();
   const block = document.createElement('div');
-  block.className = 'session-block';
-  block.id = `session-${sessionId}`;
+  block.className = 'session-block'; block.id = `session-${sessionId}`;
   block.innerHTML = `
     <div class="session-header">
-      <span class="session-title">${escHtml(input.slice(0, 50))}${input.length > 50 ? '…' : ''}</span>
+      <span class="session-title">${esc(input.slice(0, 50))}${input.length > 50 ? '…' : ''}</span>
       <span class="session-status-badge decomposing">分析中</span>
     </div>
-    <div class="decomposing-indicator">
-      <div class="spinner"></div>
-      <span>Claude 正在拆解任務...</span>
-    </div>
+    <div class="decomposing-indicator"><div class="spinner"></div><span>Claude 正在拆解任務...</span></div>
   `;
-  board.prepend(block);
+  document.getElementById('taskBoard').prepend(block);
 }
 
 function renderSession(sessionId) {
   const { session, subtasks } = state.sessions[sessionId];
   const agents = state.agents;
+  document.getElementById(`session-${sessionId}`)?.remove();
+  document.getElementById('emptyState')?.remove();
 
-  const existing = document.getElementById(`session-${sessionId}`);
-  if (existing) existing.remove();
+  const isDone = session.status === 'done';
+  const isRunning = session.status === 'running';
+  const canRun = !isDone && !isRunning && subtasks.some(s => s.status === 'pending');
 
   const block = document.createElement('div');
-  block.className = 'session-block';
-  block.id = `session-${sessionId}`;
-
+  block.className = 'session-block'; block.id = `session-${sessionId}`;
   block.innerHTML = `
     <div class="session-header">
-      <span class="session-title">${escHtml(session.title)}</span>
+      <span class="session-title">${esc(session.title)}</span>
       <span class="session-id">#${session.id.slice(0, 8)}</span>
-      <span class="session-status-badge ${session.status}" id="ss-${session.id}">
-        ${sessionStatusLabel(session.status)}
-      </span>
+      <span class="session-status-badge ${session.status}" id="ss-${session.id}">${sessionStatusLabel(session.status)}</span>
+      ${canRun ? `<button class="run-btn" id="run-${session.id}" onclick="runSession('${session.id}')">▶ 執行任務</button>` : ''}
+      ${isDone ? '' : isRunning ? `<button class="run-btn running" id="run-${session.id}" disabled>⏳ 執行中</button>` : ''}
     </div>
     <div class="subtask-list">
       ${subtasks.map(s => {
         const agent = agents[s.agent_id] || { icon: '🤖', name: s.agent_id };
+        const resultHtml = s.result
+          ? `<div class="subtask-result">${esc(s.result)}</div>`
+          : s.error ? `<div class="subtask-result">${esc(s.error)}</div>` : '';
         return `
-          <div class="subtask-item ${s.status}" data-subtask-id="${s.id}">
+          <div class="subtask-item ${s.status}" data-subtask-id="${s.id}" data-agent-id="${s.agent_id}">
             <div class="subtask-seq">${s.seq}</div>
             <div class="subtask-body">
-              <div class="subtask-title">${escHtml(s.title)}</div>
-              <div class="subtask-desc">${escHtml(s.description)}</div>
-              <div class="subtask-agent-tag">
-                <span>${agent.icon}</span>
-                <span>${agent.name}</span>
-              </div>
-              ${s.result ? `<div class="subtask-result">${escHtml(s.result)}</div>` : ''}
+              <div class="subtask-title">${esc(s.title)}</div>
+              <div class="subtask-desc">${esc(s.description)}</div>
+              <div class="subtask-agent-tag"><span>${agent.icon}</span><span>${agent.name}</span></div>
+              ${resultHtml}
             </div>
             <div class="subtask-status-ctl">
               <span class="status-pill ${s.status}">${statusLabel(s.status)}</span>
-              ${s.status === 'pending' ? `
-                <button class="mark-done-btn" onclick="markStatus('${s.id}', 'running')">▶ 開始</button>
-              ` : s.status === 'running' ? `
-                <button class="mark-done-btn" onclick="markStatus('${s.id}', 'done')">✓ 完成</button>
-              ` : ''}
             </div>
           </div>
         `;
       }).join('')}
     </div>
   `;
-
-  const board = document.getElementById('taskBoard');
-  board.prepend(block);
-}
-
-function renderSessionError(sessionId, error) {
-  const block = document.getElementById(`session-${sessionId}`);
-  if (!block) return;
-  block.innerHTML = `
-    <div class="session-header">
-      <span class="session-title" style="color:var(--red)">拆解失敗</span>
-      <span class="session-status-badge error">ERROR</span>
-    </div>
-    <div style="padding:12px;background:var(--surface);border:1px solid var(--red);border-radius:4px;font-size:11px;color:var(--red)">
-      ${escHtml(error)}
-    </div>
-  `;
-}
-
-// ── Subtask Status ────────────────────────────────────────
-async function markStatus(subtaskId, status) {
-  await fetch(`/api/subtasks/${subtaskId}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
-  });
+  document.getElementById('taskBoard').prepend(block);
 }
 
 // ── Helpers ───────────────────────────────────────────────
-function statusLabel(s) {
-  return { pending: 'PENDING', running: 'RUNNING', done: 'DONE', error: 'ERROR', skipped: 'SKIP' }[s] || s;
-}
-
-function sessionStatusLabel(s) {
-  return { decomposing: '分析中', pending: '待執行', running: '執行中', done: '完成', error: '錯誤' }[s] || s;
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function timeAgo(unixTs) {
-  const diff = Math.floor(Date.now() / 1000) - unixTs;
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-  return `${Math.floor(diff/86400)}d ago`;
-}
+const statusLabel = s => ({ pending: 'PENDING', running: 'RUNNING', done: 'DONE', error: 'ERROR', skipped: 'SKIP' }[s] || s.toUpperCase());
+const sessionStatusLabel = s => ({ decomposing: '分析中', pending: '待執行', running: '執行中', done: '完成', error: '錯誤' }[s] || s);
+const esc = str => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const timeAgo = ts => { const d = Math.floor(Date.now()/1000)-ts; if(d<60) return `${d}s`; if(d<3600) return `${Math.floor(d/60)}m`; if(d<86400) return `${Math.floor(d/3600)}h`; return `${Math.floor(d/86400)}d`; };
 
 let toastTimer;
-function toast(msg, type = '') {
+function toast(msg, type='') {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `show ${type}`;
+  el.textContent = msg; el.className = `show ${type}`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.className = '', 3000);
+  toastTimer = setTimeout(() => el.className = '', 3500);
 }
 
-// ── Keyboard Shortcut ─────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') submitTask();
-});
+document.addEventListener('keydown', e => { if ((e.metaKey||e.ctrlKey) && e.key==='Enter') submitTask(); });
 
-// ── Init ──────────────────────────────────────────────────
-(async () => {
-  await loadAgents();
-  await loadHistory();
-  connectSSE();
-})();
+(async () => { await loadAgents(); await loadHistory(); connectSSE(); })();
 </script>
 </body>
 </html>

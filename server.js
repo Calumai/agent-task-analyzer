@@ -8,6 +8,7 @@ const path = require('path');
 
 const db = require('./services/db');
 const { decomposeTask, loadAgents } = require('./services/taskDecomposer');
+const { runAllSubtasks } = require('./services/agentRunner');
 const sse = require('./services/sse');
 
 const app = express();
@@ -42,12 +43,11 @@ app.get('/api/sessions', (req, res) => {
 app.get('/api/sessions/:id', (req, res) => {
   const session = db.getSession(req.params.id);
   if (!session) return res.status(404).json({ error: 'Session not found' });
-
   const subtasks = db.getSubtasks(req.params.id);
   res.json({ session, subtasks });
 });
 
-// ── Task Decomposition (P1 核心) ──────────────────────────
+// ── Task Decomposition (P1) ───────────────────────────────
 app.post('/api/decompose', async (req, res) => {
   const { input } = req.body;
 
@@ -60,55 +60,83 @@ app.post('/api/decompose', async (req, res) => {
   }
 
   const sessionId = uuidv4();
-
-  // 立即回傳 session id，讓前端開始監聽
   res.json({ sessionId, status: 'decomposing' });
 
-  // 背景執行拆解
   try {
-    // 先建立 pending session（title 暫時用 input 前段）
-    db.createSession({
-      id: sessionId,
-      title: input.slice(0, 40),
-      rawInput: input,
-    });
+    db.createSession({ id: sessionId, title: input.slice(0, 40), rawInput: input });
     db.updateSessionStatus(sessionId, 'decomposing');
 
-    sse.broadcast('session:created', {
-      sessionId,
-      status: 'decomposing',
-      input,
-    });
+    sse.broadcast('session:created', { sessionId, status: 'decomposing', input });
 
-    // 呼叫 Claude 拆解
     const { title, subtasks } = await decomposeTask(sessionId, input);
 
-    // 更新 session title
     db.updateSessionTitle(sessionId, title);
-
-    // 儲存子任務
     db.createSubtasks(subtasks);
     db.updateSessionStatus(sessionId, 'pending');
 
-    sse.broadcast('session:decomposed', {
-      sessionId,
-      title,
-      subtasks,
-    });
+    sse.broadcast('session:decomposed', { sessionId, title, subtasks });
 
   } catch (err) {
     console.error('[decompose error]', err);
-    try {
-      db.updateSessionStatus(sessionId, 'error');
-    } catch {}
-    sse.broadcast('session:error', {
-      sessionId,
-      error: err.message,
-    });
+    try { db.updateSessionStatus(sessionId, 'error'); } catch {}
+    sse.broadcast('session:error', { sessionId, error: err.message });
   }
 });
 
-// ── Subtask status update ─────────────────────────────────
+// ── Run Session (P2) ──────────────────────────────────────
+app.post('/api/sessions/:id/run', async (req, res) => {
+  const session = db.getSession(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (session.status === 'running') {
+    return res.status(409).json({ error: '已在執行中' });
+  }
+
+  const subtasks = db.getSubtasks(req.params.id);
+  res.json({ ok: true, message: '開始執行' });
+
+  db.updateSessionStatus(session.id, 'running');
+  sse.broadcast('session:running', { sessionId: session.id });
+
+  await runAllSubtasks(subtasks, session.raw_input, {
+    onStart(subtask) {
+      db.updateSubtaskStatus(subtask.id, 'running');
+      sse.broadcast('subtask:updated', {
+        subtaskId: subtask.id,
+        sessionId: session.id,
+        status: 'running',
+      });
+    },
+    onDone(subtask, result) {
+      db.updateSubtaskStatus(subtask.id, 'done', { result });
+      sse.broadcast('subtask:updated', {
+        subtaskId: subtask.id,
+        sessionId: session.id,
+        status: 'done',
+        result,
+      });
+    },
+    onError(subtask, error) {
+      db.updateSubtaskStatus(subtask.id, 'error', { error });
+      sse.broadcast('subtask:updated', {
+        subtaskId: subtask.id,
+        sessionId: session.id,
+        status: 'error',
+        error,
+      });
+    },
+  });
+
+  // 檢查是否全部完成
+  const final = db.getSubtasks(session.id);
+  const allDone = final.every(s => ['done', 'skipped'].includes(s.status));
+  const hasError = final.some(s => s.status === 'error');
+  const finalStatus = allDone ? 'done' : hasError ? 'error' : 'pending';
+
+  db.updateSessionStatus(session.id, finalStatus);
+  sse.broadcast('session:finished', { sessionId: session.id, status: finalStatus });
+});
+
+// ── Subtask manual status update ──────────────────────────
 app.patch('/api/subtasks/:id/status', (req, res) => {
   const { status, result, error } = req.body;
   const validStatuses = ['pending', 'running', 'done', 'error', 'skipped'];
@@ -119,14 +147,7 @@ app.patch('/api/subtasks/:id/status', (req, res) => {
 
   try {
     db.updateSubtaskStatus(req.params.id, status, { result, error });
-
-    sse.broadcast('subtask:updated', {
-      subtaskId: req.params.id,
-      status,
-      result,
-      error,
-    });
-
+    sse.broadcast('subtask:updated', { subtaskId: req.params.id, status, result, error });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -144,7 +165,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────
-const HOST = process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1';
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 db.ready.then(() => app.listen(PORT, HOST, () => {
   console.log(`\n🤖 Agent Task Analyzer`);
   console.log(`━━━━━━━━━━━━━━━━━━━━━━`);
