@@ -1,0 +1,18 @@
+{
+  "name": "agent-task-analyzer",
+  "version": "0.1.0",
+  "description": "A visual AI agent task decomposition and monitoring system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sql.js": "^1.14.1",
+    "uuid": "^9.0.1"
+  }
+}

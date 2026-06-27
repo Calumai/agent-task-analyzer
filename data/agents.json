@@ -1,0 +1,47 @@
+[
+  {
+    "id": "researcher",
+    "name": "研究員",
+    "name_en": "Researcher",
+    "role": "資料收集與分析",
+    "skills": ["web_search", "summarize", "fact_check"],
+    "icon": "🔍",
+    "color": "#00FF88"
+  },
+  {
+    "id": "writer",
+    "name": "撰稿人",
+    "name_en": "Writer",
+    "role": "內容撰寫與編輯",
+    "skills": ["copywriting", "editing", "translation"],
+    "icon": "✍️",
+    "color": "#4EA8DE"
+  },
+  {
+    "id": "coder",
+    "name": "工程師",
+    "name_en": "Coder",
+    "role": "程式碼撰寫與除錯",
+    "skills": ["coding", "debugging", "code_review"],
+    "icon": "💻",
+    "color": "#FF79C6"
+  },
+  {
+    "id": "designer",
+    "name": "設計師",
+    "name_en": "Designer",
+    "role": "視覺設計與 UI/UX",
+    "skills": ["ui_design", "ux_research", "prototyping"],
+    "icon": "🎨",
+    "color": "#FFB86C"
+  },
+  {
+    "id": "reviewer",
+    "name": "審核員",
+    "name_en": "Reviewer",
+    "role": "品質控管與最終審查",
+    "skills": ["qa", "proofreading", "validation"],
+    "icon": "✅",
+    "color": "#BD93F9"
+  }
+]
