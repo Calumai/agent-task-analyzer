@@ -144,10 +144,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────
-db.ready.then(() => app.listen(PORT, '127.0.0.1', () => {
+const HOST = process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1';
+db.ready.then(() => app.listen(PORT, HOST, () => {
   console.log(`\n🤖 Agent Task Analyzer`);
   console.log(`━━━━━━━━━━━━━━━━━━━━━━`);
-  console.log(`🌐 http://127.0.0.1:${PORT}`);
+  console.log(`🌐 http://${HOST}:${PORT}`);
   console.log(`📦 DB: ${process.env.DB_PATH || './data/tasks.db'}`);
   console.log(`🔑 API Key: ${process.env.ANTHROPIC_API_KEY ? '✅ 已設定' : '❌ 未設定（請檢查 .env）'}`);
   console.log(`━━━━━━━━━━━━━━━━━━━━━━\n`);
